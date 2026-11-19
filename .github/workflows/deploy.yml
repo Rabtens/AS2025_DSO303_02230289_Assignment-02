@@ -1,0 +1,61 @@
+name: deploy
+on:
+  push:
+    branches: [main]          # push to main => automatic redeploy
+  pull_request:
+    branches: [main]          # PRs get a plan only
+
+permissions:
+  id-token: write             # GitHub OIDC -> AWS, no long-lived keys
+  contents: read
+
+env:
+  TF_IN_AUTOMATION: "true"
+  TF_VAR_ses_sender: ${{ vars.SES_SENDER }}
+  TF_VAR_tutor_email: ${{ vars.TUTOR_EMAIL }}
+  TF_VAR_alarm_email: ${{ vars.ALARM_EMAIL }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.10.5" }
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Static checks
+        run: |
+          python -m py_compile backend/*.py
+
+      - name: Build Lambda package
+        run: scripts/build.sh
+
+      - name: Terraform init
+        run: >
+          terraform -chdir=infra init
+          -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+          -backend-config="key=exam-platform/terraform.tfstate"
+          -backend-config="region=${{ vars.AWS_REGION || 'us-east-1' }}"
+          -backend-config="use_lockfile=true"
+
+      - run: terraform -chdir=infra validate
+      - run: terraform -chdir=infra plan -out=tfplan -input=false
+
+      - name: Terraform apply (main only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform -chdir=infra apply -input=false -auto-approve tfplan
+
+      - name: Invalidate CDN and smoke test
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          DIST=$(terraform -chdir=infra output -raw cloudfront_distribution_id)
+          URL=$(terraform -chdir=infra output -raw site_url)
+          aws cloudfront create-invalidation --distribution-id "$DIST" --paths "/*" >/dev/null
+          curl -fsS --retry 5 --retry-delay 10 "$URL/" >/dev/null
+          curl -fsS --retry 5 --retry-delay 10 "$URL/api/health"
