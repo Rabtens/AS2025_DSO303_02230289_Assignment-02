@@ -14,6 +14,7 @@ permissions:
 env:
   TF_IN_AUTOMATION: "true"
   TF_VAR_db_backup_retention_days: ${{ vars.DB_BACKUP_RETENTION_DAYS || '1' }}
+  TF_VAR_db_max_acu: ${{ vars.DB_MAX_ACU || '4' }}
   TF_VAR_ses_sender: ${{ vars.SES_SENDER }}
   TF_VAR_tutor_email: ${{ vars.TUTOR_EMAIL }}
   TF_VAR_alarm_email: ${{ vars.ALARM_EMAIL }}
