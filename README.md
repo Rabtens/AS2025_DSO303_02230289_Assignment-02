@@ -39,7 +39,14 @@ Prerequisites: AWS credentials for a sandbox account, Terraform ≥ 1.10, Python
    ```
    Note the `state_bucket` and `deploy_role_arn` outputs.
 2. **Verify email addresses in SES** (sender and tutor; SES sandbox only sends to verified addresses).
-3. **GitHub repo → Settings → Variables**, add: `AWS_ROLE_ARN`, `TF_STATE_BUCKET`, `AWS_REGION` (optional), `SES_SENDER`, `TUTOR_EMAIL`, `ALARM_EMAIL`.
+3. **GitHub repo → Settings → Secrets and variables → Actions → Variables**, set these repository variables from the AWS bootstrap outputs. Run the commands from the repository root.
+
+   | Repository variable | Command to print its value |
+   |---|---|
+   | `AWS_ROLE_ARN` | `terraform -chdir=bootstrap output -raw deploy_role_arn` |
+   | `TF_STATE_BUCKET` | `terraform -chdir=bootstrap output -raw state_bucket` |
+
+   Paste the complete ARN and bucket name. Also set `SES_SENDER`, `TUTOR_EMAIL`, `ALARM_EMAIL`, and optionally `AWS_REGION`.
 4. **Push to `main`.** The workflow builds the Lambda package, runs `terraform plan/apply`, invalidates CloudFront and smoke-tests `/` and `/api/health`. Pull requests run plan only.
    *Manual alternative:*
    ```bash

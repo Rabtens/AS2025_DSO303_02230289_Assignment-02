@@ -42,24 +42,23 @@ jobs:
       - name: Validate deployment variables
         env:
           AWS_ROLE_ARN: ${{ vars.AWS_ROLE_ARN }}
-          AWS_REGION: ${{ vars.AWS_REGION }}
           TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
         run: |
-          if [ -z "$AWS_ROLE_ARN" ]; then
-            echo "ERROR: AWS_ROLE_ARN is not configured."
-            exit 1
+          validation_failed=0
+
+          if [[ ! "$AWS_ROLE_ARN" =~ ^arn:aws(-[a-z0-9]+)*:iam::[0-9]{12}:role/[^[:space:]\<\>]+$ ]]; then
+            echo "::error::Set the GitHub Actions variable AWS_ROLE_ARN to the deploy_role_arn output from terraform -chdir=bootstrap output -raw deploy_role_arn."
+            validation_failed=1
           fi
 
-          if [[ ! "$AWS_ROLE_ARN" =~ ^arn:aws(-[a-z]+)?:iam::[0-9]{12}:role/.+ ]]; then
-            echo "ERROR: AWS_ROLE_ARN must contain a complete IAM Role ARN."
-            exit 1
+          if [[ ! "$TF_STATE_BUCKET" =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
+            echo "::error::Set the GitHub Actions variable TF_STATE_BUCKET to the state_bucket output from terraform -chdir=bootstrap output -raw state_bucket."
+            validation_failed=1
           fi
 
-          if [ -z "$TF_STATE_BUCKET" ]; then
-            echo "ERROR: TF_STATE_BUCKET is not configured."
+          if (( validation_failed )); then
             exit 1
           fi
-
           echo "Deployment variables validated."
 
       # 5. Configure AWS credentials using GitHub OIDC
