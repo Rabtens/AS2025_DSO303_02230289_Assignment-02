@@ -122,16 +122,6 @@ jobs:
             -auto-approve \
             tfplan
 
-      - name: Verify database Availability Zones
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          CLUSTER=$(terraform -chdir=infra output -raw db_cluster_id)
-          MEMBERS=$(aws rds describe-db-clusters --db-cluster-identifier "$CLUSTER" --query 'DBClusters[0].DBClusterMembers' --output json)
-          echo "$MEMBERS" | jq -r '.[] | [.DBInstanceIdentifier, (if .IsClusterWriter then "writer" else "reader" end)] | @tsv'
-          INSTANCES=$(aws rds describe-db-instances --filters "Name=db-cluster-id,Values=$CLUSTER" --query 'DBInstances[].{Instance:DBInstanceIdentifier,Zone:AvailabilityZone,Status:DBInstanceStatus}' --output json)
-          echo "$INSTANCES" | jq -r '.[] | [.Instance, .Zone, .Status] | @tsv'
-          jq -e '[.[] | select(.Status == "available") | .Zone] | unique | length >= 2' <<< "$INSTANCES" >/dev/null
-
       # 12. Invalidate CloudFront cache and smoke test
       - name: Invalidate CDN and smoke test
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -174,15 +174,6 @@ locals {
   db_cluster_arn  = var.db_express ? local.express_outputs.Arn : aws_rds_cluster.db[0].arn
 }
 
-resource "aws_rds_cluster_instance" "express_reader" {
-  count              = var.db_express ? 1 : 0
-  identifier         = "${local.db_cluster_id}-reader"
-  cluster_identifier = local.db_cluster_id
-  engine             = "aurora-postgresql"
-  instance_class     = "db.serverless"
-  promotion_tier     = 1
-}
-
 moved {
   from = aws_db_subnet_group.db
   to   = aws_db_subnet_group.db[0]

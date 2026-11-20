@@ -20,4 +20,4 @@ See the [lab instructions](../lab/LAB_INSTRUCTIONS.md) for replay steps.
 | [Frontend screenshot](aws-frontend.png) | The application served through CloudFront |
 | [API health screenshot](aws-api-health.png) | The live health endpoint passed its PostgreSQL query |
 
-Live upload and notification evidence is pending. The deployed Aurora Express cluster has one writer. The two-AZ failover evidence above comes from the lab simulation.
+Live upload and notification evidence is pending. The deployed Aurora Express cluster has one writer. AWS returned `InstanceQuotaExceeded` when adding a second instance in the [reader deployment attempt](https://github.com/Rabtens/AS2025_DSO303_02230289_Assignment-02/actions/runs/44727943378). The two-AZ failover evidence above comes from the lab simulation.

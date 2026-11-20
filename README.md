@@ -57,10 +57,14 @@ GitHub Actions defaults to Aurora Express for the AWS Free Plan. This uses one w
    terraform init -backend-config="bucket=<state_bucket>" -backend-config="key=exam-platform/terraform.tfstate" -backend-config="region=us-east-1" -backend-config="use_lockfile=true"
    terraform apply -var ses_sender=<you> -var tutor_email=<you> -var alarm_email=<you>
    ```
-5. **Create demo users and run the walkthroughs:**
+5. **Create demo users and run the walkthroughs.** Set `DEMO_TUTOR_EMAIL` and `DEMO_STUDENT_EMAIL` to two test inboxes you control. Verify both in SES if the account is in the SES sandbox, and use the tutor inbox for `TUTOR_EMAIL`. The scripts require `jq`, an initialized Terraform backend, and AWS credentials for the deployment account.
    ```bash
-   scripts/seed.sh                                   # tutor@example.com / student@example.com
+   read -rs -p "Demo account password: " DEMO_PASSWORD
+   export DEMO_PASSWORD DEMO_TUTOR_EMAIL DEMO_STUDENT_EMAIL
+   scripts/seed.sh
+   set -o pipefail
    scripts/demo.sh | tee evidence/demo-output.txt    # walkthrough 1 and 2
+   unset DEMO_PASSWORD
    EXAM_ID=1 scripts/az-failure.sh failover          # AZ-loss simulation, writes evidence/az-failure-autosave.log
    ```
    Open the `site_url` output in a browser to capture live sign-in, autosave, and upload evidence. Run the failover command only on the standard deployment with a reader in the other AZ.
@@ -74,10 +78,10 @@ Import the saved project and follow the [lab instructions](lab/LAB_INSTRUCTIONS.
 ## Tear down
 
 ```bash
-cd infra && terraform destroy -var ses_sender=x -var tutor_email=x -var alarm_email=x
+cd infra && terraform destroy -var db_express=true -var ses_sender=x -var tutor_email=x -var alarm_email=x
 cd ../bootstrap && terraform destroy -var github_repo=<owner>/<repo>   # only after the infra stack is gone
 ```
-The lab sets `force_destroy` on buckets and `skip_final_snapshot` on Aurora so this works. AWS Backup recovery points may need deleting in the console first. NAT gateways and Aurora cost money while running: tear down after recording evidence.
+Use `db_express=false` if you deployed the standard database. Destroy the bootstrap resources only if the bucket and IAM role are dedicated to this repository. AWS Backup recovery points may need deleting first. Tear down unused resources after recording evidence.
 
 ## Pre-exam runbook (peak readiness)
 
