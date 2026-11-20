@@ -23,7 +23,7 @@ Production-style, two-AZ AWS design for 8,000 students and ~400 staff: role-base
 | [architecture/architecture.md](architecture/architecture.md) | Task 1: diagram, two walkthroughs, peak + AZ-loss explanation |
 | [docs/services.md](docs/services.md) | Task 2: service table (role, why over alternative, configuration, connections) |
 | [lab/LAB_INSTRUCTIONS.md](lab/LAB_INSTRUCTIONS.md) | Task 3: build and simulation instructions for the Cloud Architecture Lab |
-| [evidence/](evidence/) | Lab image, screenshots, deployment video, logs |
+| [evidence/](evidence/) | Lab export, simulation screenshots, and live deployment checks |
 | [infra/](infra/), [bootstrap/](bootstrap/) | Terraform for the whole stack, state bucket, GitHub OIDC role |
 | [backend/](backend/), [frontend/](frontend/) | Lambda code (api, marker, notifier) and single-page app |
 | [scripts/](scripts/) | build, seed users, run walkthroughs, simulate AZ failure |
@@ -63,13 +63,13 @@ GitHub Actions defaults to Aurora Express for the AWS Free Plan. This uses one w
    scripts/demo.sh | tee evidence/demo-output.txt    # walkthrough 1 and 2
    EXAM_ID=1 scripts/az-failure.sh failover          # AZ-loss simulation, writes evidence/az-failure-autosave.log
    ```
-   Open the `site_url` output in a browser to show the UI (sign in, autosave, upload) for the video.
+   Open the `site_url` output in a browser to capture live sign-in, autosave, and upload evidence. Run the failover command only on the standard deployment with a reader in the other AZ.
 
 Optional custom domain: pass `-var domain_name=exams.example.edu -var hosted_zone_id=Z123...`.
 
 ## Simulate the Cloud Architecture Lab (Task 3)
 
-Upload [lab/LAB_INSTRUCTIONS.md](lab/LAB_INSTRUCTIONS.md) to the lab, build, run simulations A (exam autosave), B (40 MB upload), C (AZ loss), and export the image to `evidence/`.
+Import the saved project and follow the [lab instructions](lab/LAB_INSTRUCTIONS.md) to replay exam autosave, a 40 MB upload, and AZ loss. The export and screenshots are indexed in [evidence](evidence/README.md).
 
 ## Tear down
 
@@ -87,7 +87,7 @@ The lab sets `force_destroy` on buckets and `skip_final_snapshot` on Aurora so t
 
 ## Honest limitations
 
-- Not validated by `terraform validate`/`plan` in the authoring environment (Terraform was not installed); run `terraform validate` first and fix any version-specific issues.
+- Terraform validate, plan, apply, and the frontend and database smoke tests passed in the [verified GitHub Actions run](https://github.com/Rabtens/AS2025_DSO303_02230289_Assignment-02/actions/runs/44725365978).
 - Lab shortcuts: AdministratorAccess for the deploy role, no final DB snapshot, `force_destroy` buckets, ID token passed to API (production: shorter tokens, refresh flow, MFA for staff), tutor notification goes to one configured address.
 - DB schema is created on first Lambda cold start; use a migration tool in production.
-- Evidence files (lab image, video, screenshots) must be produced by you from the lab and your AWS account.
+- The live Free Plan deployment verifies a single Aurora writer. The two-AZ database and failover are demonstrated in the Cloud Architecture Lab.
