@@ -1,3 +1,9 @@
+variable "db_backup_retention_days" {
+  description = "Number of days to retain Aurora automated backups."
+  type        = number
+  default     = 7
+}
+
 resource "aws_db_subnet_group" "db" {
   name       = "${local.name}-db"
   subnet_ids = aws_subnet.data[*].id
@@ -14,7 +20,7 @@ resource "aws_rds_cluster" "db" {
   kms_key_id                      = aws_kms_key.main.arn
   db_subnet_group_name            = aws_db_subnet_group.db.name
   vpc_security_group_ids          = [aws_security_group.db.id]
-  backup_retention_period         = 7
+  backup_retention_period         = var.db_backup_retention_days
   skip_final_snapshot             = true # lab setting; use a final snapshot + deletion_protection in production
   apply_immediately               = true
   enabled_cloudwatch_logs_exports = ["postgresql"]
