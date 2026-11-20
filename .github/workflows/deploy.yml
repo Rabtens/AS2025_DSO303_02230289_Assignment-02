@@ -134,8 +134,4 @@ jobs:
             --paths "/*" >/dev/null
 
           curl -fsS --retry 5 --retry-delay 10 "$URL/" >/dev/null
-          if ! curl -fsS --retry 5 --retry-delay 10 "$URL/api/health"; then
-            FUNCTION_NAME=$(terraform -chdir=infra output -raw api_function_name)
-            aws logs tail "/aws/lambda/$FUNCTION_NAME" --since 10m --format short --no-cli-pager || true
-            exit 1
-          fi
+          curl -fsS --retry 5 --retry-delay 10 "$URL/api/health"

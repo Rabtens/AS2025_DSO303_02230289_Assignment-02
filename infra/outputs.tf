@@ -6,7 +6,6 @@ output "user_pool_id" { value = aws_cognito_user_pool.main.id }
 output "user_pool_client_id" { value = aws_cognito_user_pool_client.web.id }
 output "uploads_bucket" { value = aws_s3_bucket.uploads.id }
 output "db_cluster_id" { value = local.db_cluster_id }
-output "api_function_name" { value = aws_lambda_function.fn["api"].function_name }
 output "vpc_id" { value = aws_vpc.main.id }
 output "private_app_subnet_ids" { value = aws_subnet.app[*].id }
 output "public_subnet_ids" { value = aws_subnet.public[*].id }
