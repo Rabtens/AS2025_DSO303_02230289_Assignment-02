@@ -1,4 +1,4 @@
-"""Shared Postgres access: Lambda -> RDS Proxy (TLS) -> Aurora. Password comes from Secrets Manager."""
+"""Shared PostgreSQL access over TLS using IAM or Secrets Manager."""
 import json
 import os
 import ssl
@@ -25,9 +25,17 @@ SCHEMA = [
 
 
 def _get_password():
+    secret_arn = os.environ["DB_SECRET_ARN"]
+    if not secret_arn:
+        return boto3.client("rds").generate_db_auth_token(
+            DBHostname=os.environ["DB_HOST"],
+            Port=5432,
+            DBUsername=os.environ["DB_USER"],
+        )
+
     global _password
     if _password is None:
-        secret = boto3.client("secretsmanager").get_secret_value(SecretId=os.environ["DB_SECRET_ARN"])
+        secret = boto3.client("secretsmanager").get_secret_value(SecretId=secret_arn)
         _password = json.loads(secret["SecretString"])["password"]
     return _password
 

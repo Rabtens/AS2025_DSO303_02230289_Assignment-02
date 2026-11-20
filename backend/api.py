@@ -34,6 +34,7 @@ def handler(event, _ctx):
     http = event["requestContext"]["http"]
     method, path = http["method"], http["path"]
     if path == "/api/health":
+        db.rows("select 1")
         return resp(200, {"ok": True})
     claims = event["requestContext"]["authorizer"]["jwt"]["claims"]
     user, email, groups = claims["sub"], claims.get("email", ""), groups_of(claims)

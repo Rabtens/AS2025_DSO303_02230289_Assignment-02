@@ -13,6 +13,7 @@ permissions:
 
 env:
   TF_IN_AUTOMATION: "true"
+  TF_VAR_db_express: ${{ vars.DB_EXPRESS || 'true' }}
   TF_VAR_db_backup_retention_days: ${{ vars.DB_BACKUP_RETENTION_DAYS || '1' }}
   TF_VAR_db_max_acu: ${{ vars.DB_MAX_ACU || '4' }}
   TF_VAR_ses_sender: ${{ vars.SES_SENDER }}
@@ -108,6 +109,14 @@ jobs:
       - name: Terraform apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          if ! terraform -chdir=infra show -json tfplan | jq -e '
+            all(.resource_changes[]?; .type != "aws_rds_cluster" and .type != "aws_cloudformation_stack" or
+              (.change.actions | index("delete") | not))
+          ' >/dev/null; then
+            echo "::error::The plan could delete a database. Migrate the data before switching deployment modes."
+            exit 1
+          fi
+
           terraform -chdir=infra apply \
             -input=false \
             -auto-approve \

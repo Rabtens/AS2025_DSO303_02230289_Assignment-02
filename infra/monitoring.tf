@@ -28,7 +28,7 @@ locals {
     }
     db-cpu = {
       namespace = "AWS/RDS", metric = "CPUUtilization", stat = "Average", threshold = 80, op = "GreaterThanThreshold"
-      dims      = { DBClusterIdentifier = aws_rds_cluster.db.cluster_identifier }
+      dims      = { DBClusterIdentifier = local.db_cluster_id }
     }
   }
 }
@@ -71,7 +71,7 @@ resource "aws_cloudwatch_dashboard" "main" {
         type = "metric", x = 0, y = 6, width = 12, height = 6,
         properties = {
           title   = "Aurora ACU / connections", region = var.region, stat = "Average", period = 60,
-          metrics = [["AWS/RDS", "ServerlessDatabaseCapacity", "DBClusterIdentifier", aws_rds_cluster.db.cluster_identifier], [".", "DatabaseConnections", ".", "."]]
+          metrics = [["AWS/RDS", "ServerlessDatabaseCapacity", "DBClusterIdentifier", local.db_cluster_id], [".", "DatabaseConnections", ".", "."]]
         }
       },
       {

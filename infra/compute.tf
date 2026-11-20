@@ -59,7 +59,7 @@ resource "aws_iam_role_policy" "lambda" {
     Statement = [
       { Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject"], Resource = "${aws_s3_bucket.uploads.arn}/*" },
       { Effect = "Allow", Action = ["kms:GenerateDataKey", "kms:Decrypt"], Resource = aws_kms_key.main.arn },
-      { Effect = "Allow", Action = "secretsmanager:GetSecretValue", Resource = aws_rds_cluster.db.master_user_secret[0].secret_arn },
+      { Effect = "Allow", Action = local.db_auth_action, Resource = local.db_auth_resource },
       { Effect = "Allow", Action = "sqs:SendMessage", Resource = [aws_sqs_queue.marking.arn, aws_sqs_queue.notify.arn] },
       { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"], Resource = [aws_sqs_queue.marking.arn, aws_sqs_queue.notify.arn] },
       { Effect = "Allow", Action = "ses:SendEmail", Resource = "*" }
@@ -68,11 +68,13 @@ resource "aws_iam_role_policy" "lambda" {
 }
 
 locals {
+  db_auth_action   = var.db_express ? "rds-db:connect" : "secretsmanager:GetSecretValue"
+  db_auth_resource = var.db_express ? "arn:aws:rds-db:${var.region}:${local.account_id}:dbuser:${local.express_outputs.ResourceId}/postgres" : aws_rds_cluster.db[0].master_user_secret[0].secret_arn
   lambda_env = {
-    DB_HOST           = aws_db_proxy.db.endpoint
-    DB_NAME           = "exams"
-    DB_USER           = "examadmin"
-    DB_SECRET_ARN     = aws_rds_cluster.db.master_user_secret[0].secret_arn
+    DB_HOST           = var.db_express ? local.express_outputs.Endpoint : aws_db_proxy.db[0].endpoint
+    DB_NAME           = var.db_express ? "postgres" : "exams"
+    DB_USER           = var.db_express ? "postgres" : "examadmin"
+    DB_SECRET_ARN     = var.db_express ? "" : local.db_auth_resource
     UPLOAD_BUCKET     = aws_s3_bucket.uploads.id
     MARKING_QUEUE_URL = aws_sqs_queue.marking.url
     NOTIFY_QUEUE_URL  = aws_sqs_queue.notify.url
@@ -110,7 +112,7 @@ resource "aws_lambda_function" "fn" {
   tracing_config { mode = "Active" }
   environment { variables = local.lambda_env }
 
-  depends_on = [aws_cloudwatch_log_group.fn, aws_iam_role_policy_attachment.lambda_vpc, aws_db_proxy_target.db]
+  depends_on = [aws_cloudwatch_log_group.fn, aws_iam_role_policy_attachment.lambda_vpc, aws_iam_role_policy.lambda, aws_db_proxy_target.db]
 }
 
 resource "aws_lambda_event_source_mapping" "marker" {

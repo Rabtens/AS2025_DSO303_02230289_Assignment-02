@@ -33,6 +33,8 @@ Production-style, two-AZ AWS design for 8,000 students and ~400 staff: role-base
 
 Prerequisites: AWS credentials for a sandbox account, Terraform ≥ 1.10, Python 3.12+ and pip, AWS CLI, a GitHub repo. Region defaults to `us-east-1` (WAF and ACM for CloudFront live there).
 
+GitHub Actions defaults to Aurora Express for the AWS Free Plan. This uses one writer, AWS-owned database encryption, and direct IAM-authenticated PostgreSQL over TLS through the Aurora internet access gateway. Set the repository variable `DB_EXPRESS` to `false` before deploying the standard private Aurora cluster with RDS Proxy on a compatible AWS account. Choose the mode before creating the database. Switching modes on an existing deployment requires migrating its data.
+
 1. **Bootstrap (once, local state):**
    ```bash
    cd bootstrap && terraform init && terraform apply -var github_repo=<owner>/<repo>
