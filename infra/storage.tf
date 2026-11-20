@@ -22,12 +22,12 @@ resource "aws_s3_bucket_policy" "frontend" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow", Principal = { Service = "cloudfront.amazonaws.com" }, Action = "s3:GetObject",
+        Effect    = "Allow", Principal = { Service = "cloudfront.amazonaws.com" }, Action = "s3:GetObject",
         Resource  = "${aws_s3_bucket.frontend.arn}/*",
         Condition = { StringEquals = { "AWS:SourceArn" = aws_cloudfront_distribution.cdn.arn } }
       },
       {
-        Effect = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.frontend.arn, "${aws_s3_bucket.frontend.arn}/*"],
+        Effect    = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.frontend.arn, "${aws_s3_bucket.frontend.arn}/*"],
         Condition = { Bool = { "aws:SecureTransport" = "false" } }
       }
     ]
@@ -78,7 +78,7 @@ resource "aws_s3_bucket_policy" "uploads_tls" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.uploads.arn, "${aws_s3_bucket.uploads.arn}/*"],
+      Effect    = "Deny", Principal = "*", Action = "s3:*", Resource = [aws_s3_bucket.uploads.arn, "${aws_s3_bucket.uploads.arn}/*"],
       Condition = { Bool = { "aws:SecureTransport" = "false" } }
     }]
   })
@@ -150,7 +150,7 @@ resource "aws_sqs_queue_policy" "notify" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect = "Allow", Principal = { Service = "s3.amazonaws.com" }, Action = "sqs:SendMessage", Resource = aws_sqs_queue.notify.arn,
+      Effect    = "Allow", Principal = { Service = "s3.amazonaws.com" }, Action = "sqs:SendMessage", Resource = aws_sqs_queue.notify.arn,
       Condition = { ArnEquals = { "aws:SourceArn" = aws_s3_bucket.uploads.arn }, StringEquals = { "aws:SourceAccount" = local.account_id } }
     }]
   })

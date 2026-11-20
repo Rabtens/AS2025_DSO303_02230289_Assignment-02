@@ -40,7 +40,7 @@ data "archive_file" "lambda" {
 resource "aws_iam_role" "lambda" {
   name = "${local.name}-lambda"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Effect = "Allow", Principal = { Service = "lambda.amazonaws.com" }, Action = "sts:AssumeRole" }]
   })
 }
@@ -69,15 +69,15 @@ resource "aws_iam_role_policy" "lambda" {
 
 locals {
   lambda_env = {
-    DB_HOST          = aws_db_proxy.db.endpoint
-    DB_NAME          = "exams"
-    DB_USER          = "examadmin"
-    DB_SECRET_ARN    = aws_rds_cluster.db.master_user_secret[0].secret_arn
-    UPLOAD_BUCKET    = aws_s3_bucket.uploads.id
+    DB_HOST           = aws_db_proxy.db.endpoint
+    DB_NAME           = "exams"
+    DB_USER           = "examadmin"
+    DB_SECRET_ARN     = aws_rds_cluster.db.master_user_secret[0].secret_arn
+    UPLOAD_BUCKET     = aws_s3_bucket.uploads.id
     MARKING_QUEUE_URL = aws_sqs_queue.marking.url
-    NOTIFY_QUEUE_URL = aws_sqs_queue.notify.url
-    SES_SENDER       = var.ses_sender
-    TUTOR_EMAIL      = var.tutor_email
+    NOTIFY_QUEUE_URL  = aws_sqs_queue.notify.url
+    SES_SENDER        = var.ses_sender
+    TUTOR_EMAIL       = var.tutor_email
   }
   functions = {
     api      = { handler = "api.handler", timeout = 15, memory = 512 }

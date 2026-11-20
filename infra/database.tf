@@ -4,19 +4,19 @@ resource "aws_db_subnet_group" "db" {
 }
 
 resource "aws_rds_cluster" "db" {
-  cluster_identifier          = "${local.name}-aurora"
-  engine                      = "aurora-postgresql"
-  database_name               = "exams"
-  master_username             = "examadmin"
-  manage_master_user_password = true # password lives in Secrets Manager, never in code or state
-  master_user_secret_kms_key_id = aws_kms_key.main.arn
-  storage_encrypted           = true
-  kms_key_id                  = aws_kms_key.main.arn
-  db_subnet_group_name        = aws_db_subnet_group.db.name
-  vpc_security_group_ids      = [aws_security_group.db.id]
-  backup_retention_period     = 7
-  skip_final_snapshot         = true # lab setting; use a final snapshot + deletion_protection in production
-  apply_immediately           = true
+  cluster_identifier              = "${local.name}-aurora"
+  engine                          = "aurora-postgresql"
+  database_name                   = "exams"
+  master_username                 = "examadmin"
+  manage_master_user_password     = true # password lives in Secrets Manager, never in code or state
+  master_user_secret_kms_key_id   = aws_kms_key.main.arn
+  storage_encrypted               = true
+  kms_key_id                      = aws_kms_key.main.arn
+  db_subnet_group_name            = aws_db_subnet_group.db.name
+  vpc_security_group_ids          = [aws_security_group.db.id]
+  backup_retention_period         = 7
+  skip_final_snapshot             = true # lab setting; use a final snapshot + deletion_protection in production
+  apply_immediately               = true
   enabled_cloudwatch_logs_exports = ["postgresql"]
 
   serverlessv2_scaling_configuration {
@@ -40,7 +40,7 @@ resource "aws_rds_cluster_instance" "db" {
 resource "aws_iam_role" "proxy" {
   name = "${local.name}-rds-proxy"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Effect = "Allow", Principal = { Service = "rds.amazonaws.com" }, Action = "sts:AssumeRole" }]
   })
 }
@@ -109,7 +109,7 @@ resource "aws_backup_plan" "main" {
 resource "aws_iam_role" "backup" {
   name = "${local.name}-backup"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [{ Effect = "Allow", Principal = { Service = "backup.amazonaws.com" }, Action = "sts:AssumeRole" }]
   })
 }
